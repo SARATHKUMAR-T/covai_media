@@ -59,6 +59,18 @@ class MediaFineController {
       next(error);
     }
   }
+  public async mediaFineReport(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const result = await mediaFineService.mediaFineStatics(req.body);
+      if (result) res.status(result.status).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export const mediaFineController = MediaFineController.getInstance();

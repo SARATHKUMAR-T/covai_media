@@ -49,11 +49,7 @@ class MediaTrackingService {
         `SELECT * FROM media_tracking WHERE  status=1`
       );
       if (result.length === 0) {
-        return new APIresponse<null>(
-          true,
-          StatusCodes.NOT_FOUND,
-          "unable to fetch"
-        );
+        return new APIresponse<null>(true, StatusCodes.NOT_FOUND, "not found");
       }
 
       return new APIresponse<RowDataPacket[]>(
@@ -72,6 +68,7 @@ class MediaTrackingService {
   }
 
   public async addMediaTracking(media: MediaTracking) {
+    const date = new Date().toISOString().replace("T", " ").slice(0, 19);
     try {
       const [result] = await db.query<ResultSetHeader>(
         `INSERT INTO media_tracking (media_id,library_card${
@@ -81,10 +78,10 @@ class MediaTrackingService {
         ${media.deleted_at ? `,deleted_at` : ""}
 
      ) VALUES (${media.media_id},'${media.library_card}'${
-          media.issued_at ? `',${media.issued_at}'` : ""
+          media.issued_at ? `,'${media.issued_at}'` : ""
         }
-      ${media.returned_at ? `',${media.returned_at}'` : ""}
-      ${media.deleted_at ? `',${media.deleted_at}'` : ""}
+      ${media.returned_at ? `,'${media.returned_at}'` : ""}
+      ${media.deleted_at ? `,'${media.deleted_at}'` : ""}
       )`
       );
 

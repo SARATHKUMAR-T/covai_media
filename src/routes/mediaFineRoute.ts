@@ -18,6 +18,9 @@ class MediaFineRoute {
     this.router.route("/mediafine").put(mediaFineController.newMediaFine);
     this.router.route("/mediafine").get(mediaFineController.getAllMediaFine);
     this.router
+      .route("/mediafinereport")
+      .post(mediaFineController.mediaFineReport);
+    this.router
       .route("/mediafine/:id")
       .get(mediaFineController.getMediaFine)
       .post(

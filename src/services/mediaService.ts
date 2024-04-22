@@ -45,9 +45,7 @@ class MediaService {
   }
   public async allMedias() {
     try {
-      const [result] = await db.query<RowDataPacket[]>(
-        `SELECT * FROM media WHERE  status=1`
-      );
+      const [result] = await db.query<RowDataPacket[]>(`SELECT * FROM media`);
       if (result.length === 0) {
         return new APIresponse<null>(
           true,
@@ -114,7 +112,7 @@ class MediaService {
 
   public async updateMedia(media: Media, id: string) {
     try {
-      let sql = `UPDATE media SET`;
+      let sql = ` UPDATE media SET `;
       if (media.author_name) {
         sql += ` author_name = '${media.author_name}',`;
       }
@@ -139,9 +137,13 @@ class MediaService {
       if (media.status) {
         sql += ` status = ${media.status},`;
       }
+      if (!media.status) {
+        sql += ` status = ${media.status},`;
+      }
 
       sql = sql.slice(0, -1);
       sql += ` WHERE id = ${id}`;
+
       const [result] = await db.query<ResultSetHeader>(sql);
       if (result.affectedRows > 0) {
         return this.fetchMedia(id);

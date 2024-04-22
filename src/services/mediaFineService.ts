@@ -43,6 +43,33 @@ class MediaFineService {
       );
     }
   }
+  public async fetchMediaFineByMediaId(id: string) {
+    try {
+      const [result] = await db.query<RowDataPacket[]>(
+        `SELECT * FROM media_fine_details WHERE media_tracking_id=${id}`
+      );
+      if (result.length === 0) {
+        return new APIresponse<null>(
+          true,
+          StatusCodes.NOT_FOUND,
+          "No media fine Found"
+        );
+      }
+
+      return new APIresponse<RowDataPacket[]>(
+        false,
+        StatusCodes.OK,
+        ReasonPhrases.OK,
+        result
+      );
+    } catch (error: Error | any) {
+      return new APIresponse<null>(
+        true,
+        StatusCodes.BAD_REQUEST,
+        error.message
+      );
+    }
+  }
   public async allMediaFines() {
     try {
       const [result] = await db.query<RowDataPacket[]>(
@@ -80,8 +107,8 @@ class MediaFineService {
         ${media.fine_paid_at ? `,fine_paid_at` : ""}
      ) VALUES (${media.media_tracking_id},'${media.library_card}',${
           media.fine_amount
-        }${media.fine_imposed_at ? `',${media.fine_imposed_at}'` : ""}
-      ${media.fine_paid_at ? `',${media.fine_paid_at}'` : ""}
+        }${media.fine_imposed_at ? `,'${media.fine_imposed_at}'` : ""}
+      ${media.fine_paid_at ? `,'${media.fine_paid_at}'` : ""}
       )`
       );
 
@@ -120,6 +147,69 @@ class MediaFineService {
       const [result] = await db.query<ResultSetHeader>(sql);
       if (result.affectedRows > 0) {
         return this.fetchMediaFine(id);
+      }
+      return new APIresponse<null>(false, StatusCodes.OK, ReasonPhrases.OK);
+    } catch (error: Error | any) {
+      return new APIresponse<null>(
+        true,
+        StatusCodes.BAD_REQUEST,
+        error.message
+      );
+    }
+  }
+
+  public async mediaFineStatics(range: { from: string; to: string }) {
+    try {
+      const [result] = await db.query<RowDataPacket[]>(`
+     SELECT * FROM media_fine_details WHERE fine_imposed_at 
+     BETWEEN '${range.from}' AND '${range.to}'`);
+      if (result) {
+        const totalRecords = result.length;
+        const finePaid = result.filter((item) => {
+          if (item.fine_imposed_at && item.fine_paid_at) return item;
+        });
+        const pendingFine = result.filter((item) => {
+          if (item.fine_imposed_at && !item.fine_paid_at) return item;
+        });
+
+        const totalFine = result.reduce((a, b) => a + b.fine_amount, 0);
+        return new APIresponse<{}>(
+          false,
+          StatusCodes.OK,
+          "repost fetched successfully",
+          {
+            totalRecords,
+            paid: finePaid.length,
+            pending: pendingFine.length,
+            finePaid,
+            pendingFine,
+            totalFine,
+          }
+        );
+      }
+    } catch (error: Error | any) {
+      return new APIresponse<null>(
+        true,
+        StatusCodes.BAD_REQUEST,
+        error.message
+      );
+    }
+  }
+  public async updateFine(media: MediaFine, id: string) {
+    try {
+      let sql = `UPDATE media_fine_details SET`;
+      if (media.fine_amount) {
+        sql += ` fine_amount = fine_amount+${media.fine_amount},`;
+      }
+      sql = sql.slice(0, -1);
+      sql += ` WHERE media_tracking_id = ${id}`;
+      const [result] = await db.query<ResultSetHeader>(sql);
+      if (result.affectedRows > 0) {
+        return new APIresponse<null>(
+          false,
+          StatusCodes.OK,
+          "fine updated successfully"
+        );
       }
       return new APIresponse<null>(false, StatusCodes.OK, ReasonPhrases.OK);
     } catch (error: Error | any) {

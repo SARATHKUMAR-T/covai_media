@@ -6,6 +6,7 @@ import { APIresponse } from "../types";
 import { User } from "../types/user";
 import { Encrypter, tokenGenerator } from "../utils";
 import { mediaTrackingService } from "./mediaTrackingService";
+import { mediaService } from "./mediaService";
 
 class UserService {
   private static instance: UserService;
@@ -31,8 +32,7 @@ class UserService {
           "No user Found"
         );
       }
-      const token = tokenGenerator({ id: result[0].user_id });
-
+      const token = tokenGenerator({ id: result[0].id });
       return new APIresponse<RowDataPacket[]>(
         false,
         StatusCodes.OK,
@@ -60,7 +60,6 @@ class UserService {
           "unable to fetch"
         );
       }
-
       return new APIresponse<RowDataPacket[]>(
         false,
         StatusCodes.OK,
@@ -143,19 +142,42 @@ WHERE author_name LIKE "${query}%" OR journal LIKE '${query}%' OR published_year
       );
     }
   }
-  public async bookingMedia(id: string) {
-    console.log(id);
+  public async bookingMedia(id: string, user: User) {
+    console.log(user);
 
     try {
       const [result] = await db.query<RowDataPacket[]>(
         `SELECT status FROM media WHERE id=${id}`
       );
+
       if (result[0].status === 1) {
-        await mediaTrackingService.addMediaTracking({
+        const res = await mediaTrackingService.addMediaTracking({
           media_id: Number(id),
+          library_card: user.library_card,
+          issued_at: new Date().toISOString().replace("T", " ").slice(0, 19),
         });
+        console.log(res);
+
+        if (!res?.isError) {
+          const updation = await mediaService.updateMedia({ status: 0 }, id);
+        }
+        const return_date = new Date();
+        return_date.setDate(return_date.getDate() + 7);
+        return new APIresponse<{}>(
+          false,
+          StatusCodes.OK,
+          "media booked successfully",
+          {
+            return_date: return_date.toLocaleDateString(),
+            note: "Please return the media before or on return date to avoid fine.",
+          }
+        );
       }
-      console.log(result, "result");
+      return new APIresponse<null>(
+        false,
+        StatusCodes.ACCEPTED,
+        "media is not availble for booking.somebody is holding the media"
+      );
     } catch (error: Error | any) {
       return new APIresponse<null>(
         true,

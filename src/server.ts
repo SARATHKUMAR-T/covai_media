@@ -3,6 +3,7 @@ import "dotenv/config";
 import express, { Application } from "express";
 import morgan from "morgan";
 import Routes from "./routes";
+import { availablityScheduler, fineScheduler } from "./utils";
 
 class Server {
   private static instance: Server;
@@ -22,34 +23,30 @@ class Server {
     return Server.instance;
   }
 
-  // setter function for port number
   set portNumber(port: number) {
     this.PORT = port;
   }
-
-  // getter for port number
 
   get portNumber(): number {
     return this.PORT;
   }
 
-  //   config method
   private config(): void {
-    this.app.use(express.static(`${__dirname}/reports`));
     this.app.use(cors());
     this.app.use(express.urlencoded({ extended: true }));
     this.app.use(express.json());
     this.app.use(morgan("combined"));
   }
 
-  //   routes
   private setUpRoutes(): void {
     new Routes(this.app);
   }
 
-  //   starting the server
   private start() {
-    // db connection
+    setInterval(() => {
+      fineScheduler();
+      availablityScheduler();
+    }, 300000);
 
     this.app
       .listen(this.PORT, (): void => {
@@ -68,7 +65,6 @@ class Server {
 
 const nodeServer = Server.getInstance();
 
-// configuring the port number
 nodeServer.portNumber = process.env.PORT
   ? parseInt(process.env.PORT)
   : nodeServer.portNumber;

@@ -10,12 +10,7 @@ class ErrorHandler {
     res: Response,
     next: NextFunction
   ) {
-    if (err.message == "invalid file format") {
-      return res.status(StatusCodes.BAD_REQUEST).json({
-        message: "unsupported file format,please upload excelsheet only",
-      });
-    }
-    return res.status(500).json({
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       message: err.message,
     });
   }

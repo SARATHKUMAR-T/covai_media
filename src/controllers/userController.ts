@@ -58,7 +58,10 @@ class UserController {
   }
   public async bookMedia(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await userService.bookingMedia(req.params.id);
+      const result = await userService.bookingMedia(
+        req.params.id,
+        req.body.user
+      );
       if (result) res.status(result.status).json(result);
     } catch (error) {
       next(error);
