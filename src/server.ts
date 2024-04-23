@@ -3,7 +3,7 @@ import "dotenv/config";
 import express, { Application } from "express";
 import morgan from "morgan";
 import Routes from "./routes";
-import { availablityScheduler, fineScheduler } from "./utils";
+import { availablityScheduler, fineScheduler } from "./scheduler";
 
 class Server {
   private static instance: Server;
@@ -14,6 +14,7 @@ class Server {
     this.config();
     this.setUpRoutes();
     this.start();
+    this.scheduler();
   }
 
   public static getInstance() {
@@ -42,12 +43,14 @@ class Server {
     new Routes(this.app);
   }
 
-  private start() {
+  private scheduler(): void {
     setInterval(() => {
       fineScheduler();
       availablityScheduler();
     }, 300000);
+  }
 
+  private start() {
     this.app
       .listen(this.PORT, (): void => {
         console.log(`Server is listening on ${this.PORT}`);

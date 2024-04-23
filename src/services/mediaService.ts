@@ -19,7 +19,7 @@ class MediaService {
   public async fetchMedia(id: string) {
     try {
       const [result] = await db.query<RowDataPacket[]>(
-        `SELECT * FROM media WHERE id=${id} AND status=1`
+        `SELECT * FROM media WHERE id=${id}`
       );
       if (result.length === 0) {
         return new APIresponse<null>(

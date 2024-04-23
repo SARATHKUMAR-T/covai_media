@@ -50,7 +50,7 @@ class UserController {
   }
   public async searchMedia(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await userService.search(req.params.query);
+      const result = await userService.search(req.query);
       res.status(result.status).json(result);
     } catch (error) {
       next(error);

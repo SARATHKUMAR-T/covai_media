@@ -2,7 +2,7 @@ import "dotenv/config";
 import { ReasonPhrases, StatusCodes } from "http-status-codes";
 import { ResultSetHeader, RowDataPacket } from "mysql2";
 import { db } from "../config/db_connection";
-import { APIresponse } from "../types";
+import { APIresponse, Media } from "../types";
 import { User } from "../types/user";
 import { Encrypter, tokenGenerator } from "../utils";
 import { mediaTrackingService } from "./mediaTrackingService";
@@ -107,10 +107,20 @@ class UserService {
       );
     }
   }
-  public async search(query: string) {
+  public async search(query: Media) {
+    console.log(query);
+
     try {
-      const [result] = await db.query<RowDataPacket[]>(`SELECT * FROM media
-WHERE author_name LIKE "${query}%" OR journal LIKE '${query}%' OR published_year LIKE "${query}%"`);
+      const [result] = await db.query<RowDataPacket[]>(
+        `SELECT * FROM media WHERE ${
+          query.author_name ? `author_name LIKE '${query.author_name}%'` : ""
+        } ${query.journal ? `journal LIKE '${query.journal}%'` : ""} ${
+          query.published_year
+            ? `published_year LIKE '${query.published_year}%'`
+            : ""
+        }`
+      );
+
       if (result.length === 0) {
         return new APIresponse<null>(false, StatusCodes.OK, "no result found");
       }
@@ -142,7 +152,7 @@ WHERE author_name LIKE "${query}%" OR journal LIKE '${query}%' OR published_year
       );
     }
   }
-  public async bookingMedia(id: string, user: User) {
+  public async bookingMedia(id: string, user: any) {
     console.log(user);
 
     try {
@@ -151,12 +161,15 @@ WHERE author_name LIKE "${query}%" OR journal LIKE '${query}%' OR published_year
       );
 
       if (result[0].status === 1) {
+        const issue_date = new Date()
+          .toISOString()
+          .replace("T", " ")
+          .slice(0, 19);
         const res = await mediaTrackingService.addMediaTracking({
           media_id: Number(id),
-          library_card: user.library_card,
-          issued_at: new Date().toISOString().replace("T", " ").slice(0, 19),
+          library_card: user[0].library_card,
+          issued_at: issue_date,
         });
-        console.log(res);
 
         if (!res?.isError) {
           const updation = await mediaService.updateMedia({ status: 0 }, id);

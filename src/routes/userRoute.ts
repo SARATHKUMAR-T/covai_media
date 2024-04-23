@@ -17,7 +17,7 @@ class userRoute {
   initiateRoutes() {
     this.router.route("/users").put(userController.newUser);
     this.router.route("/users").get(userController.getAllUser);
-    this.router.route("/search/:query").get(userController.searchMedia);
+    this.router.route("/search").get(userController.searchMedia);
     this.router
       .route("/book/:id")
       .post(userMiddleware.tokenMiddleware, userController.bookMedia);
