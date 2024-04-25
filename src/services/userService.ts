@@ -108,8 +108,6 @@ class UserService {
     }
   }
   public async search(query: Media) {
-    console.log(query);
-
     try {
       const [result] = await db.query<RowDataPacket[]>(
         `SELECT * FROM media WHERE ${
@@ -153,8 +151,6 @@ class UserService {
     }
   }
   public async bookingMedia(id: string, user: any) {
-    console.log(user);
-
     try {
       const [result] = await db.query<RowDataPacket[]>(
         `SELECT status FROM media WHERE id=${id}`
